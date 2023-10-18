@@ -2,18 +2,17 @@ package core
 
 import (
 	"context"
-	"time"
-	"os"
-	"log"
 	"fmt"
+	"log"
+	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/Big-Vi/ticketInf/daos"
 )
 
 type Base struct {
-	Client *pgxpool.Pool
-	Ctx    context.Context
-	Cancel context.CancelFunc
+	Dao *daos.Dao
 }
 
 func(base *Base) Bootstrap() error {
@@ -31,7 +30,6 @@ func(base *Base) initDB() error {
 	defer cancel()
 
 	DBUrl := getConnectionString()
-	fmt.Println(DBUrl)
 	config, err := pgxpool.ParseConfig(DBUrl)
 	if err != nil {
 		return err
@@ -47,9 +45,7 @@ func(base *Base) initDB() error {
 		return err
 	}
 
-	base.Client = pool
-	base.Ctx = ctx 
-	base.Cancel = cancel
+	base.Dao = &daos.Dao{Client: pool, Ctx: ctx, Cancel: cancel}
 	return nil
 }
 

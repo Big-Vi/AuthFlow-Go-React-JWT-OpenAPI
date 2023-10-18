@@ -8,21 +8,18 @@ import (
 	"fmt"
 
 	"github.com/Big-Vi/ticketInf/core"
-	"github.com/Big-Vi/ticketInf/daos"
 	"github.com/Big-Vi/ticketInf/models"
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/Big-Vi/ticketInf/dal"
 )
 
 type userApi struct {
 	app core.Base
-	UserDAO daos.UserDAO
 }
 
 func bindUserApi(app core.Base, api *echo.Group) {
-	userApi := userApi{app: app, UserDAO: &dal.Dal{}}
+	userApi := userApi{app: app}
 	userGroup := api.Group("/user")
 	userGroup.POST("", userApi.create)
 	userGroup.POST("/login", userApi.login)
@@ -61,7 +58,8 @@ func(userApi *userApi) CustomAuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 			return echo.NewHTTPError(http.StatusUnauthorized, "Missing Email in the header")
 		}
 
-		exist, user, err := userApi.UserDAO.GetUserByEmail(userApi.app, email)
+		
+		exist, user, err := userApi.app.Dao.GetUserByEmail(email)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusForbidden, "Permission denied")
 		}
@@ -98,7 +96,7 @@ func(userApi *userApi) create(c echo.Context) error {
 		return err
 	}
 
-	if err := userApi.UserDAO.CreateUser(userApi.app, user); err != nil {
+	if err := userApi.app.Dao.CreateUser(user); err != nil {
 		return c.JSON(http.StatusConflict, "User already exists")
 	}
 
@@ -142,7 +140,7 @@ func (userApi *userApi) login(c echo.Context) error {
 		return err
 	}
 
-	exist, user, err := userApi.UserDAO.GetUserByEmail(userApi.app, loginReq.Email)
+	exist, user, err := userApi.app.Dao.GetUserByEmail(loginReq.Email)
 	if err != nil {
 		return err
 	}
