@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: ticketinf-store
+    image: ticketinf-store-image
+    build:
+      context: .
+    volumes:
+      - .:/app
+    depends_on:
+      - database
+    networks:
+      - ticketinf-store_net
+    ports:
+      - 8000:8000
+  database:
+    container_name: ticketinf-store-db
+    image: postgres
+    restart: always
+    hostname: db
+    networks:
+      - ticketinf-store_net
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
+
+networks:
+  ticketinf-store_net:
+    driver: bridge
