@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: API Specification
+  version: 1.0.0
+paths:
+  /api/user:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelsCreateUserReq'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsUser'
+          description: OK
+        "409":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ModelsUser'
+                type: array
+          description: Conflict
+components:
+  schemas:
+    ModelsCreateUserReq:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        username:
+          type: string
+      type: object
+    ModelsUser:
+      properties:
+        createdAt:
+          format: date-time
+          type: string
+        email:
+          type: string
+        id:
+          type: integer
+        username:
+          type: string
+      type: object
