@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/Big-Vi/ticketInf/core"
 	"github.com/golang-jwt/jwt/v5"
@@ -27,7 +28,11 @@ func validateJWT(tokenString string) (*jwt.Token, error) {
 func CustomAuthMiddleware(app core.Base) echo.MiddlewareFunc {
 	return func (next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			tokenString := c.Request().Header.Get("Authorization")
+			cookie, err := c.Cookie("access_token")
+			if err != nil {
+                return echo.NewHTTPError(http.StatusUnauthorized, "Missing or invalid access token")
+            }
+			tokenString := cookie.Value
 			if tokenString == "" {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Missing Authorization header")
 			}
@@ -58,6 +63,11 @@ func CustomAuthMiddleware(app core.Base) echo.MiddlewareFunc {
 			}
 			if user.Email != claims["userEmail"] {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Email not associated with the claim")
+			}
+
+			expirationTime := time.Unix(int64(claims["expiresAt"].(float64)), 0)
+			if time.Now().After(expirationTime) {
+				return echo.NewHTTPError(http.StatusForbidden, "Token has expired")
 			}
 	
 			// You can access the username from the claims and set it in the context for further processing.

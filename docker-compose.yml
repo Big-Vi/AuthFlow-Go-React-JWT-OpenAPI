@@ -9,7 +9,10 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - database
+      database:
+          condition: service_healthy
+      redis:
+          condition: service_healthy
     networks:
       - ticketinf-store_net
     ports:
@@ -27,9 +30,29 @@ services:
       - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+    healthcheck:
+            test: "exit 0"
+  redis:
+        image: "redis:alpine"
+        container_name: ticketinf-store_redis
+        volumes:
+            - redis-data:/data
+            - redis-conf:/usr/local/etc/redis/redis.conf
+        # environment:
+        #     - ALLOW_EMPTY_PASSWORD=yes
+        ports:
+            - 6379:6379
+        networks:
+          - ticketinf-store_net
+        # command: redis-server --requirepass MDNcVb924a --loglevel warning
+        command: redis-server
+        healthcheck:
+            test: "exit 0"
 
 volumes:
   db-data:
+  redis-data:
+  redis-conf:
 
 networks:
   ticketinf-store_net:

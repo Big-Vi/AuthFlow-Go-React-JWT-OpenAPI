@@ -2,14 +2,15 @@ package apis
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
-	"fmt"
 
 	"github.com/Big-Vi/ticketInf/core"
 	"github.com/Big-Vi/ticketInf/models"
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,11 +24,22 @@ func bindUserApi(app core.Base, api *echo.Group) {
 	userGroup := api.Group("/user")
 	userGroup.POST("", userApi.create)
 	userGroup.POST("/login", userApi.login)
+	userGroup.POST("/logout", userApi.logout)
 	userGroup.GET("/dashboard", userApi.viewDashboard, CustomAuthMiddleware(app))
 }
 
 func(userApi *userApi) viewDashboard(c echo.Context) error {
-	return c.JSON(http.StatusOK, "test")
+	sessionID, err := c.Cookie("sessionID")
+	if err == nil {
+		sessionData, err := userApi.app.Dao.RedisClient.HGetAll(c.Request().Context(), sessionID.Value).Result()
+		if err != nil {
+			return c.JSON(http.StatusOK, err.Error())
+		}
+
+		// Use sessionData to access user-specific session information
+		fmt.Println("d", sessionData)
+	}
+	return c.JSON(http.StatusOK, "user dashboard")
 }
 
 func(userApi *userApi) create(c echo.Context) error {
@@ -70,16 +82,16 @@ func ValidPassword(user *models.User, pw string) bool {
 func createJWT(user *models.User) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	claims := &jwt.MapClaims{
-		"expiresAt": 15000,
+		"expiresAt": time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 		"userEmail": user.Email,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
+	
 	return token.SignedString([]byte(secret))
 }
 
-func (userApi *userApi) login(c echo.Context) error {
+func(userApi *userApi) login(c echo.Context) error {
 	loginReq := new(models.LoginReq)
 	if err := json.NewDecoder(c.Request().Body).Decode(loginReq); err != nil {
 		return err
@@ -102,10 +114,76 @@ func (userApi *userApi) login(c echo.Context) error {
 		return err
 	}
 
+	c.SetCookie(&http.Cookie{
+        Name:     "access_token",
+        Value:    token,
+        Path:     "/",
+        HttpOnly: true,
+		Expires: time.Now().Add(24 * time.Hour),
+        // Secure:   true, // Enable in production with HTTPS
+    })
+
+	// Create a new Redis session for the user
+    sessionID := uuid.New().String() // Unique session ID
+    sessionData := map[string]interface{}{
+        "user_id": user.ID,
+    }
+	
+    // Store the session data in Redis
+    err = userApi.app.Dao.RedisClient.HSet(c.Request().Context(), sessionID, sessionData).Err()
+    if err != nil {
+        return c.JSON(http.StatusOK, err)
+    }
+
+    // Set a cookie with the session ID
+    c.SetCookie(&http.Cookie{
+        Name:  "sessionID",
+        Value: sessionID,
+        Path:  "/",
+    })
+
 	resp := models.LoginRes{
 		Token: token,
 		Email: user.Email,
 	}
+	fmt.Println(resp)
+	fmt.Println(sessionID)
 
-	return c.JSON(http.StatusOK, resp)
+	// return c.JSON(http.StatusOK, resp)
+	return c.Redirect(http.StatusSeeOther, "/")
+}
+
+func(userApi *userApi) logout(c echo.Context) error {
+	// Retrieve the session ID or token from the client
+    sessionID, err := c.Cookie("sessionID") // Retrieve the session ID from a cookie
+    // OR
+    // token := c.Request().Header.Get("Authorization") // Retrieve the token from the header
+
+    if err != nil {
+        return echo.NewHTTPError(http.StatusUnauthorized, "User is not authenticated")
+    }
+
+    // Delete the session data in Redis
+    err = userApi.app.Dao.RedisClient.Del(c.Request().Context(), sessionID.Value).Err()
+    if err != nil {
+        return c.JSON(http.StatusOK, err)
+    }
+
+	c.SetCookie(&http.Cookie{
+        Name:     "access_token",
+        Path:     "/",
+        HttpOnly: true,
+		MaxAge: -1,
+    })
+
+    // Remove the session cookie (optional)
+    c.SetCookie(&http.Cookie{
+        Name:   "sessionID",
+        Value:  "",
+        Path:   "/",
+        MaxAge: -1, // Expire the cookie
+    })
+
+    // Return a response, e.g., a redirect to the login page
+    return c.Redirect(http.StatusSeeOther, "/")
 }

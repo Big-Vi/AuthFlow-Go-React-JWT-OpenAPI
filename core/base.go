@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/Big-Vi/ticketInf/daos"
+	"github.com/gorilla/sessions"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type Base struct {
@@ -21,8 +24,28 @@ func(base *Base) Bootstrap() error {
 		log.Fatalf("DB connection went wrong: %v", err)
 		os.Exit(1)
 	}
+	base.initRedis()
 
 	return nil
+}
+
+func(base *Base) initRedis() {
+	// Initialize Redis client
+	base.Dao.RedisClient = redis.NewClient(&redis.Options{
+		Addr: "ticketinf-store_redis:6379", // Redis server address
+		DB:   0,
+	})
+
+	// Initialize Gorilla sessions with Redis store
+	base.Dao.RedisStore = sessions.NewCookieStore([]byte("sessionsecretkey"))
+	base.Dao.RedisStore.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   60 * 15, // Session duration in seconds (e.g., 15 minutes)
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   false, // Set to true in production with HTTPS
+	}
+	base.Dao.RedisStore.MaxAge(base.Dao.RedisStore.Options.MaxAge)
 }
 
 func(base *Base) initDB() error {

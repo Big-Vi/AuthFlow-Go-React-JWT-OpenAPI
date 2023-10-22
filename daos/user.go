@@ -6,16 +6,9 @@ import (
 
 	"github.com/Big-Vi/ticketInf/models"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const DbTimeout = 40
-
-type Dao struct {
-	Client *pgxpool.Pool
-	Ctx    context.Context
-	Cancel context.CancelFunc
-}
 
 func(dao *Dao) CreateUser(user *models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout*time.Second)

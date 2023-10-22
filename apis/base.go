@@ -20,7 +20,7 @@ func InitApi(app core.Base) {
 	}
 
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello")
+		return c.String(http.StatusOK, "Homepage")
 	})
 
 	if err := server.ListenAndServe(); err != nil {
