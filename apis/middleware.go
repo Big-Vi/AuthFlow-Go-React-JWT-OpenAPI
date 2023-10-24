@@ -43,13 +43,13 @@ func CustomAuthMiddleware(app core.Base) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("Invalid token: %v", err))
 			}
 	
-			email := c.Request().Header.Get("Email")
-			if email == "" {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Missing Email in the header")
-			}
+			email, err := c.Cookie("email")
+			if err != nil {
+                return echo.NewHTTPError(http.StatusUnauthorized, "Missing email or not correct email")
+            }
 	
 			
-			exist, user, err := app.Dao.GetUserByEmail(email)
+			exist, user, err := app.Dao.GetUserByEmail(email.Value)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusForbidden, "Permission denied")
 			}

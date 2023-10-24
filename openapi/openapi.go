@@ -8,10 +8,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/swaggest/openapi-go/openapi3"
+	"github.com/swaggest/swgui/v3emb"
 )
 
 func BindOpenApi(api *echo.Group) {
 	api.GET("/openapi.yaml", openapiHandler)
+	swagger := v3emb.NewHandler("API Definition", "/api/openapi.yaml", "/api/doc")
+	api.GET("/doc", echo.WrapHandler(swagger))
+	api.GET("/doc/*", echo.WrapHandler(swagger))
 }
 
 func openapiHandler(c echo.Context) error {
@@ -37,7 +41,7 @@ func openapiHandler(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "application/yaml")
 	c.Response().WriteHeader(http.StatusOK)
 	_, _ = c.Response().Write(data)
-	
+
 	return nil
 }
 
@@ -49,6 +53,26 @@ func generate() *openapi3.Spec {
 		WithVersion("1.0.0")
 
 	buildUser(reflector)
+
+	scheme := openapi3.SecuritySchemeOrRef{
+		SecurityScheme: &openapi3.SecurityScheme{
+			HTTPSecurityScheme: &openapi3.HTTPSecurityScheme{
+				Scheme: "bearerAuth",
+				Bearer: &openapi3.Bearer{},
+			},
+		},
+	}
+	security := openapi3.ComponentsSecuritySchemes{}
+	security.WithMapOfSecuritySchemeOrRefValuesItem("bearerAuth", scheme)
+	reflector.Spec.Components.WithSecuritySchemes(security)
+
+	//
+	// enforce security scheme globally
+	//
+
+	reflector.Spec.WithSecurity(map[string][]string{
+		"bearerAuth": {},
+	})
 
 	return reflector.Spec
 }

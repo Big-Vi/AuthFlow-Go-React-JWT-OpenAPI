@@ -2,6 +2,8 @@ openapi: 3.0.3
 info:
   title: API Specification
   version: 1.0.0
+security:
+- bearerAuth: []
 paths:
   /api/user:
     post:
@@ -25,6 +27,46 @@ paths:
                   $ref: '#/components/schemas/ModelsUser'
                 type: array
           description: Conflict
+      tags:
+      - user
+  /api/user/dashboard:
+    get:
+      responses:
+        "204":
+          description: No Content
+      tags:
+      - user
+  /api/user/login:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelsLoginReq'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsLoginRes'
+          description: OK
+        "409":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ModelsLoginRes'
+                type: array
+          description: Conflict
+      tags:
+      - user
+  /api/user/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+      tags:
+      - user
 components:
   schemas:
     ModelsCreateUserReq:
@@ -34,6 +76,20 @@ components:
         password:
           type: string
         username:
+          type: string
+      type: object
+    ModelsLoginReq:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      type: object
+    ModelsLoginRes:
+      properties:
+        email:
+          type: string
+        token:
           type: string
       type: object
     ModelsUser:
@@ -48,3 +104,7 @@ components:
         username:
           type: string
       type: object
+  securitySchemes:
+    bearerAuth:
+      scheme: bearer
+      type: http

@@ -135,10 +135,15 @@ func(userApi *userApi) login(c echo.Context) error {
         return c.JSON(http.StatusOK, err)
     }
 
-    // Set a cookie with the session ID
+    // Set a cookie with the session ID & Email
     c.SetCookie(&http.Cookie{
         Name:  "sessionID",
         Value: sessionID,
+        Path:  "/",
+    })
+	c.SetCookie(&http.Cookie{
+        Name:  "email",
+        Value: user.Email,
         Path:  "/",
     })
 
