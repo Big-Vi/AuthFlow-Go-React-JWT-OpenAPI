@@ -5,30 +5,6 @@ info:
 security:
 - bearerAuth: []
 paths:
-  /api/user:
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ModelsCreateUserReq'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModelsUser'
-          description: OK
-        "409":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/ModelsUser'
-                type: array
-          description: Conflict
-      tags:
-      - user
   /api/user/dashboard:
     get:
       responses:
@@ -65,6 +41,30 @@ paths:
       responses:
         "204":
           description: No Content
+      tags:
+      - user
+  /api/user/signup:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelsCreateUserReq'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsUser'
+          description: OK
+        "409":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ModelsUser'
+                type: array
+          description: Conflict
       tags:
       - user
 components:

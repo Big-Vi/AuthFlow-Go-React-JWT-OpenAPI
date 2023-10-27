@@ -10,7 +10,7 @@ import (
 
 
 func buildUser(reflector *openapi3.Reflector) {
-	postCreateOp, _ := reflector.NewOperationContext(http.MethodPost, "/api/user")
+	postCreateOp, _ := reflector.NewOperationContext(http.MethodPost, "/api/user/signup")
 	postCreateOp.SetTags("user")
 
 	postCreateOp.AddReqStructure(new(models.CreateUserReq))

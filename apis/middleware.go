@@ -47,7 +47,6 @@ func CustomAuthMiddleware(app core.Base) echo.MiddlewareFunc {
 			if err != nil {
                 return echo.NewHTTPError(http.StatusUnauthorized, "Missing email or not correct email")
             }
-	
 			
 			exist, user, err := app.Dao.GetUserByEmail(email.Value)
 			if err != nil {

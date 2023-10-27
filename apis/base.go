@@ -6,10 +6,16 @@ import (
 	"github.com/Big-Vi/ticketInf/core"
 	"github.com/Big-Vi/ticketInf/openapi"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func InitApi(app core.Base) {
 	e := echo.New()
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowCredentials: true,
+		// AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	api := e.Group("/api")
 	bindUserApi(app, api)

@@ -13,9 +13,9 @@ import (
 
 func BindOpenApi(api *echo.Group) {
 	api.GET("/openapi.yaml", openapiHandler)
-	swagger := v3emb.NewHandler("API Definition", "/api/openapi.yaml", "/api/doc")
-	api.GET("/doc", echo.WrapHandler(swagger))
-	api.GET("/doc/*", echo.WrapHandler(swagger))
+	openapi := v3emb.NewHandler("API Definition", "/api/openapi.yaml", "/api/doc")
+	api.GET("/doc", echo.WrapHandler(openapi))
+	api.GET("/doc/*", echo.WrapHandler(openapi))
 }
 
 func openapiHandler(c echo.Context) error {
@@ -27,7 +27,7 @@ func openapiHandler(c echo.Context) error {
 	}
 
 	// Write the YAML data to a file
-	file, err := os.Create("web/swagger.yaml")
+	file, err := os.Create("web/src/services/code/openapi.yaml")
 	if err != nil {
 		return err
 	}

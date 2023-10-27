@@ -22,9 +22,10 @@ type userApi struct {
 func bindUserApi(app core.Base, api *echo.Group) {
 	userApi := userApi{app: app}
 	userGroup := api.Group("/user")
-	userGroup.POST("", userApi.create)
+	userGroup.POST("/signup", userApi.create)
 	userGroup.POST("/login", userApi.login)
 	userGroup.POST("/logout", userApi.logout)
+	userGroup.GET("/auth-status", userApi.authStatus)
 	userGroup.GET("/dashboard", userApi.viewDashboard, CustomAuthMiddleware(app))
 }
 
@@ -91,6 +92,57 @@ func createJWT(user *models.User) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
+func(userApi *userApi) authStatus(c echo.Context) error {
+	cookie, err := c.Cookie("access_token")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Missing or invalid access token")
+	}
+	tokenString := cookie.Value
+	if tokenString == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Missing Authorization header")
+	}
+
+	token, err := validateJWT(tokenString)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("Invalid token: %v", err))
+	}
+
+	email, err := c.Cookie("email")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Missing email or not correct email")
+	}
+	
+	exist, user, err := userApi.app.Dao.GetUserByEmail(email.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusForbidden, "Permission denied")
+	}
+	if !exist {
+		return echo.NewHTTPError(http.StatusForbidden, "Email does not exist.")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims")
+	}
+	if user.Email != claims["userEmail"] {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Email not associated with the claim")
+	}
+
+	expirationTime := time.Unix(int64(claims["expiresAt"].(float64)), 0)
+	if time.Now().After(expirationTime) {
+		return echo.NewHTTPError(http.StatusForbidden, "Token has expired")
+	}
+
+	isAuthenticated := true
+
+    // Create a map for the JSON response
+    response := map[string]bool{"isAuthenticated": isAuthenticated}
+
+    // Send the JSON response
+    return c.JSON(http.StatusOK, response)
+}
+
 func(userApi *userApi) login(c echo.Context) error {
 	loginReq := new(models.LoginReq)
 	if err := json.NewDecoder(c.Request().Body).Decode(loginReq); err != nil {
@@ -118,6 +170,8 @@ func(userApi *userApi) login(c echo.Context) error {
         Name:     "access_token",
         Value:    token,
         Path:     "/",
+		Domain: "localhost",
+		SameSite: 2,
         HttpOnly: true,
 		Expires: time.Now().Add(24 * time.Hour),
         // Secure:   true, // Enable in production with HTTPS
@@ -139,11 +193,15 @@ func(userApi *userApi) login(c echo.Context) error {
     c.SetCookie(&http.Cookie{
         Name:  "sessionID",
         Value: sessionID,
+		Domain: "localhost",
+		SameSite: 2,
         Path:  "/",
     })
 	c.SetCookie(&http.Cookie{
         Name:  "email",
         Value: user.Email,
+		Domain: "localhost",
+		SameSite: 2,
         Path:  "/",
     })
 
@@ -154,8 +212,8 @@ func(userApi *userApi) login(c echo.Context) error {
 	fmt.Println(resp)
 	fmt.Println(sessionID)
 
-	// return c.JSON(http.StatusOK, resp)
-	return c.Redirect(http.StatusSeeOther, "/")
+	return c.JSON(http.StatusOK, "Successfully logged in.")
+	// return c.Redirect(http.StatusSeeOther, "/")
 }
 
 func(userApi *userApi) logout(c echo.Context) error {
@@ -184,6 +242,13 @@ func(userApi *userApi) logout(c echo.Context) error {
     // Remove the session cookie (optional)
     c.SetCookie(&http.Cookie{
         Name:   "sessionID",
+        Value:  "",
+        Path:   "/",
+        MaxAge: -1, // Expire the cookie
+    })
+	// Remove the session cookie (optional)
+    c.SetCookie(&http.Cookie{
+        Name:   "email",
         Value:  "",
         Path:   "/",
         MaxAge: -1, // Expire the cookie
