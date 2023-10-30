@@ -1,4 +1,4 @@
-module github.com/Big-Vi/ticketInf
+module github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI
 
 go 1.21.3
 

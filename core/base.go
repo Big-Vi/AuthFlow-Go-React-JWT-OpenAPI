@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Big-Vi/ticketInf/daos"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/daos"
 	"github.com/gorilla/sessions"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -18,7 +18,7 @@ type Base struct {
 	Dao *daos.Dao
 }
 
-func(base *Base) Bootstrap() error {
+func (base *Base) Bootstrap() error {
 	err := base.initDB()
 	if err != nil {
 		log.Fatalf("DB connection went wrong: %v", err)
@@ -29,10 +29,10 @@ func(base *Base) Bootstrap() error {
 	return nil
 }
 
-func(base *Base) initRedis() {
+func (base *Base) initRedis() {
 	// Initialize Redis client
 	base.Dao.RedisClient = redis.NewClient(&redis.Options{
-		Addr: "ticketinf-store_redis:6379", // Redis server address
+		Addr: "authflow-store_redis:6379", // Redis server address
 		DB:   0,
 	})
 
@@ -48,11 +48,12 @@ func(base *Base) initRedis() {
 	base.Dao.RedisStore.MaxAge(base.Dao.RedisStore.Options.MaxAge)
 }
 
-func(base *Base) initDB() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 40 * time.Second)
+func (base *Base) initDB() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
 
 	DBUrl := getConnectionString()
+	
 	config, err := pgxpool.ParseConfig(DBUrl)
 	if err != nil {
 		return err

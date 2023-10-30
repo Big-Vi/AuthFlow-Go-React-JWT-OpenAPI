@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Big-Vi/ticketInf/core"
-	"github.com/Big-Vi/ticketInf/models"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/core"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -46,7 +46,7 @@ func CheckAuth(c echo.Context, app core.Base) (*models.User, error) {
 	if err != nil {
 		return &models.User{}, echo.NewHTTPError(http.StatusUnauthorized, "Missing email or not correct email")
 	}
-	
+
 	exist, user, err := app.Dao.GetUserByEmail(email.Value)
 	if err != nil {
 		return &models.User{}, echo.NewHTTPError(http.StatusForbidden, "Permission denied")
@@ -71,7 +71,7 @@ func CheckAuth(c echo.Context, app core.Base) (*models.User, error) {
 }
 
 func CustomAuthMiddleware(app core.Base) echo.MiddlewareFunc {
-	return func (next echo.HandlerFunc) echo.HandlerFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			CheckAuth(c, app)
 			// You can access the username from the claims and set it in the context for further processing.

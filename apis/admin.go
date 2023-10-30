@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Big-Vi/ticketInf/core"
-	"github.com/Big-Vi/ticketInf/models"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/core"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/models"
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -29,7 +29,7 @@ func bindUserApi(app core.Base, api *echo.Group) {
 	userGroup.GET("/dashboard", userApi.viewDashboard, CustomAuthMiddleware(app))
 }
 
-func(userApi *userApi) viewDashboard(c echo.Context) error {
+func (userApi *userApi) viewDashboard(c echo.Context) error {
 	sessionID, err := c.Cookie("sessionID")
 	if err == nil {
 		sessionData, err := userApi.app.Dao.RedisClient.HGetAll(c.Request().Context(), sessionID.Value).Result()
@@ -43,7 +43,7 @@ func(userApi *userApi) viewDashboard(c echo.Context) error {
 	return c.JSON(http.StatusOK, "user dashboard")
 }
 
-func(userApi *userApi) create(c echo.Context) error {
+func (userApi *userApi) create(c echo.Context) error {
 	userReq := new(models.CreateUserReq)
 	if err := json.NewDecoder(c.Request().Body).Decode(userReq); err != nil {
 		return err
@@ -88,11 +88,11 @@ func createJWT(user *models.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	
+
 	return token.SignedString([]byte(secret))
 }
 
-func(userApi *userApi) authStatus(c echo.Context) error {
+func (userApi *userApi) authStatus(c echo.Context) error {
 	user, err := CheckAuth(c, userApi.app)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusForbidden, "Permission denied")
@@ -103,11 +103,11 @@ func(userApi *userApi) authStatus(c echo.Context) error {
 		"isAuthenticated": true,
 	}
 
-    // Send the JSON response
-    return c.JSON(http.StatusOK, userResp)
+	// Send the JSON response
+	return c.JSON(http.StatusOK, userResp)
 }
 
-func(userApi *userApi) login(c echo.Context) error {
+func (userApi *userApi) login(c echo.Context) error {
 	loginReq := new(models.LoginReq)
 	if err := json.NewDecoder(c.Request().Body).Decode(loginReq); err != nil {
 		return err
@@ -131,43 +131,43 @@ func(userApi *userApi) login(c echo.Context) error {
 	}
 
 	c.SetCookie(&http.Cookie{
-        Name:     "access_token",
-        Value:    token,
-        Path:     "/",
-		Domain: "localhost",
+		Name:     "access_token",
+		Value:    token,
+		Path:     "/",
+		Domain:   "localhost",
 		SameSite: 2,
-        HttpOnly: true,
-		Expires: time.Now().Add(24 * time.Hour),
-        // Secure:   true, // Enable in production with HTTPS
-    })
+		HttpOnly: true,
+		Expires:  time.Now().Add(24 * time.Hour),
+		// Secure:   true, // Enable in production with HTTPS
+	})
 
 	// Create a new Redis session for the user
-    sessionID := uuid.New().String() // Unique session ID
-    sessionData := map[string]interface{}{
-        "user_id": user.ID,
-    }
-	
-    // Store the session data in Redis
-    err = userApi.app.Dao.RedisClient.HSet(c.Request().Context(), sessionID, sessionData).Err()
-    if err != nil {
-        return c.JSON(http.StatusOK, err)
-    }
+	sessionID := uuid.New().String() // Unique session ID
+	sessionData := map[string]interface{}{
+		"user_id": user.ID,
+	}
 
-    // Set a cookie with the session ID & Email
-    c.SetCookie(&http.Cookie{
-        Name:  "sessionID",
-        Value: sessionID,
-		Domain: "localhost",
-		SameSite: 2,
-        Path:  "/",
-    })
+	// Store the session data in Redis
+	err = userApi.app.Dao.RedisClient.HSet(c.Request().Context(), sessionID, sessionData).Err()
+	if err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	// Set a cookie with the session ID & Email
 	c.SetCookie(&http.Cookie{
-        Name:  "email",
-        Value: user.Email,
-		Domain: "localhost",
+		Name:     "sessionID",
+		Value:    sessionID,
+		Domain:   "localhost",
 		SameSite: 2,
-        Path:  "/",
-    })
+		Path:     "/",
+	})
+	c.SetCookie(&http.Cookie{
+		Name:     "email",
+		Value:    user.Email,
+		Domain:   "localhost",
+		SameSite: 2,
+		Path:     "/",
+	})
 
 	resp := models.LoginRes{
 		Token: token,
@@ -185,44 +185,44 @@ func(userApi *userApi) login(c echo.Context) error {
 	// return c.Redirect(http.StatusSeeOther, "/")
 }
 
-func(userApi *userApi) logout(c echo.Context) error {
+func (userApi *userApi) logout(c echo.Context) error {
 	// Retrieve the session ID or token from the client
-    sessionID, err := c.Cookie("sessionID") // Retrieve the session ID from a cookie
-    // OR
-    // token := c.Request().Header.Get("Authorization") // Retrieve the token from the header
+	sessionID, err := c.Cookie("sessionID") // Retrieve the session ID from a cookie
+	// OR
+	// token := c.Request().Header.Get("Authorization") // Retrieve the token from the header
 
-    if err != nil {
-        return echo.NewHTTPError(http.StatusUnauthorized, "User is not authenticated")
-    }
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "User is not authenticated")
+	}
 
-    // Delete the session data in Redis
-    err = userApi.app.Dao.RedisClient.Del(c.Request().Context(), sessionID.Value).Err()
-    if err != nil {
-        return c.JSON(http.StatusOK, err)
-    }
+	// Delete the session data in Redis
+	err = userApi.app.Dao.RedisClient.Del(c.Request().Context(), sessionID.Value).Err()
+	if err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
 
 	c.SetCookie(&http.Cookie{
-        Name:     "access_token",
-        Path:     "/",
-        HttpOnly: true,
-		MaxAge: -1,
-    })
+		Name:     "access_token",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
 
-    // Remove the session cookie (optional)
-    c.SetCookie(&http.Cookie{
-        Name:   "sessionID",
-        Value:  "",
-        Path:   "/",
-        MaxAge: -1, // Expire the cookie
-    })
 	// Remove the session cookie (optional)
-    c.SetCookie(&http.Cookie{
-        Name:   "email",
-        Value:  "",
-        Path:   "/",
-        MaxAge: -1, // Expire the cookie
-    })
+	c.SetCookie(&http.Cookie{
+		Name:   "sessionID",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1, // Expire the cookie
+	})
+	// Remove the session cookie (optional)
+	c.SetCookie(&http.Cookie{
+		Name:   "email",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1, // Expire the cookie
+	})
 
-    // Return a response, e.g., a redirect to the login page
-    return c.Redirect(http.StatusSeeOther, "/")
+	// Return a response, e.g., a redirect to the login page
+	return c.Redirect(http.StatusSeeOther, "/")
 }

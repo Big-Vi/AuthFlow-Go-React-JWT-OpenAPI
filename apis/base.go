@@ -3,8 +3,8 @@ package apis
 import (
 	"net/http"
 
-	"github.com/Big-Vi/ticketInf/core"
-	"github.com/Big-Vi/ticketInf/openapi"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/core"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/openapi"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -12,7 +12,7 @@ import (
 func InitApi(app core.Base) {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:9001"},
+		AllowOrigins:     []string{"http://localhost:9001"},
 		AllowCredentials: true,
 		// AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
@@ -23,7 +23,7 @@ func InitApi(app core.Base) {
 
 	server := &http.Server{
 		Handler: e,
-		Addr: ":8000",
+		Addr:    ":8000",
 	}
 
 	e.GET("/", func(c echo.Context) error {

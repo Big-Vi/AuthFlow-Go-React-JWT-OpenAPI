@@ -5,15 +5,15 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/Big-Vi/ticketInf/apis"
-	"github.com/Big-Vi/ticketInf/core"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/apis"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/core"
 )
 
 type appWrapper struct {
 	core.Base
 }
 
-type ticketInf struct {
+type authflow struct {
 	*appWrapper
 }
 
@@ -23,7 +23,7 @@ func Execute() error {
 		log.Fatalf("Some error occured. Err: %s", err)
 	}
 
-	ti := &ticketInf{&appWrapper{core.Base{}}}
+	ti := &authflow{&appWrapper{core.Base{}}}
 
 	if err := ti.Bootstrap(); err != nil {
 		return err

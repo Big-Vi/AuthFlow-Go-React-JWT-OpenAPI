@@ -2,8 +2,8 @@ version: "3.8"
 
 services:
   app:
-    container_name: ticketinf-store
-    image: ticketinf-store-image
+    container_name: authflow-store
+    image: authflow-store-image
     build:
       context: .
     volumes:
@@ -14,16 +14,16 @@ services:
       redis:
           condition: service_healthy
     networks:
-      - ticketinf-store_net
+      - authflow-store_net
     ports:
       - 8000:8000
   database:
-    container_name: ticketinf-store-db
+    container_name: authflow-store-db
     image: postgres
     restart: always
     hostname: db
     networks:
-      - ticketinf-store_net
+      - authflow-store_net
     env_file:
       - .env
     ports:
@@ -34,7 +34,7 @@ services:
             test: "exit 0"
   redis:
         image: "redis:alpine"
-        container_name: ticketinf-store_redis
+        container_name: authflow-store_redis
         volumes:
             - redis-data:/data
             - redis-conf:/usr/local/etc/redis/redis.conf
@@ -43,7 +43,7 @@ services:
         ports:
             - 6379:6379
         networks:
-          - ticketinf-store_net
+          - authflow-store_net
         # command: redis-server --requirepass MDNcVb924a --loglevel warning
         command: redis-server
         healthcheck:
@@ -55,5 +55,5 @@ volumes:
   redis-conf:
 
 networks:
-  ticketinf-store_net:
+  authflow-store_net:
     driver: bridge

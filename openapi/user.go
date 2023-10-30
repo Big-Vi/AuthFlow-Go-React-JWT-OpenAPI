@@ -3,11 +3,10 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/Big-Vi/ticketInf/models"
+	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/models"
 	"github.com/swaggest/openapi-go"
 	"github.com/swaggest/openapi-go/openapi3"
 )
-
 
 func buildUser(reflector *openapi3.Reflector) {
 	postCreateOp, _ := reflector.NewOperationContext(http.MethodPost, "/api/user/signup")
