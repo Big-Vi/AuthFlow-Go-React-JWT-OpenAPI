@@ -93,54 +93,18 @@ func createJWT(user *models.User) (string, error) {
 }
 
 func(userApi *userApi) authStatus(c echo.Context) error {
-	cookie, err := c.Cookie("access_token")
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Missing or invalid access token")
-	}
-	tokenString := cookie.Value
-	if tokenString == "" {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Missing Authorization header")
-	}
-
-	token, err := validateJWT(tokenString)
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("Invalid token: %v", err))
-	}
-
-	email, err := c.Cookie("email")
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Missing email or not correct email")
-	}
-	
-	exist, user, err := userApi.app.Dao.GetUserByEmail(email.Value)
+	user, err := CheckAuth(c, userApi.app)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusForbidden, "Permission denied")
 	}
-	if !exist {
-		return echo.NewHTTPError(http.StatusForbidden, "Email does not exist.")
-	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims")
+	userResp := map[string]interface{}{
+		"userName":        user.Email,
+		"isAuthenticated": true,
 	}
-	if user.Email != claims["userEmail"] {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Email not associated with the claim")
-	}
-
-	expirationTime := time.Unix(int64(claims["expiresAt"].(float64)), 0)
-	if time.Now().After(expirationTime) {
-		return echo.NewHTTPError(http.StatusForbidden, "Token has expired")
-	}
-
-	isAuthenticated := true
-
-    // Create a map for the JSON response
-    response := map[string]bool{"isAuthenticated": isAuthenticated}
 
     // Send the JSON response
-    return c.JSON(http.StatusOK, response)
+    return c.JSON(http.StatusOK, userResp)
 }
 
 func(userApi *userApi) login(c echo.Context) error {
@@ -212,7 +176,12 @@ func(userApi *userApi) login(c echo.Context) error {
 	fmt.Println(resp)
 	fmt.Println(sessionID)
 
-	return c.JSON(http.StatusOK, "Successfully logged in.")
+	userResp := map[string]interface{}{
+		"userName":        user.Email,
+		"isAuthenticated": true,
+	}
+
+	return c.JSON(http.StatusOK, userResp)
 	// return c.Redirect(http.StatusSeeOther, "/")
 }
 
