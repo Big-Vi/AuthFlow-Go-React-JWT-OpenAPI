@@ -64,6 +64,30 @@ export const AuthWrapper = () => {
     }
   };
 
+  const signup = async (username, email, password) => {
+    try {
+      const response = await fetch("http://localhost:8000/api/user/signup", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (response.ok) {
+        console.log("Signup successful.");
+        navigate("/login")
+      } else {
+        // Handle signup failure here, e.g., show an error message
+        console.error("Signup failed");
+      }
+    } catch (error) {
+      // Handle network error, e.g., display a message to the user
+      console.error("Network error:", error);
+    }
+  };
+
   const logout = async () => {
     await fetch("http://localhost:8000/api/user/logout", {
       method: "POST",
@@ -78,10 +102,12 @@ export const AuthWrapper = () => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, signup, login, logout }}>
       <>
-        <RenderHeader />
-        <RenderMenu />
+        <div className="flex w-1/2">
+          <RenderHeader />
+          <RenderMenu />
+        </div>
         <RenderRoutes />
       </>
     </AuthContext.Provider>

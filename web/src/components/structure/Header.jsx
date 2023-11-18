@@ -1,11 +1,13 @@
-export const RenderHeader = () => {
+import { Link } from "react-router-dom";
 
+export const RenderHeader = () => {
      return (
           <div className="header">
-               <div className="logo">
-                    logo
+               <div className="menuItem">
+                    <Link to={'/'}>
+                         Auth flow
+                    </Link>
                </div>
-               <h1>WeHost</h1>
           </div>
      )
 }

@@ -32,7 +32,7 @@ export const RenderRoutes = () => {
              )
         }
         return (
-             <div className="menu">
+             <div className="menu flex items-center">
                   { nav.map((r, i) => {
    
                        if (!r.isPrivate && r.isMenu) {
@@ -47,9 +47,13 @@ export const RenderRoutes = () => {
                   } )}
    
                   { user.isAuthenticated ?
-                  <div className="menuItem"><Link to={'#'} onClick={logout}>Log out</Link></div>
-                  :
-                  <div className="menuItem"><Link to={'login'}>Log in</Link></div> }
+                    <div className="menuItem"><Link to={'#'} onClick={logout}>Log out</Link></div>
+                    :
+                    <>
+                         <div className="menuItem"><Link to={'signup'}>Sign up</Link></div>
+                         <div className="menuItem"><Link to={'login'}>Log in</Link></div>
+                    </>
+                   }
              </div>
         )
    }
