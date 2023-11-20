@@ -9,7 +9,7 @@ export const Signup = () => {
      const [ formData, setFormData ] = useReducer((formData, newItem) => { return ( {...formData, ...newItem} )}, {userName: "", email: "", assword: ""})
      const [ errorMessage, setErrorMessage ] = useState(null)
      
-     const doLogin = async () => {
+     const doSignup = async () => {
           try {
                await signup(formData.userName, formData.email, formData.password)
           } catch (error) {
@@ -37,7 +37,7 @@ export const Signup = () => {
                </div>
                <div>
                     <label className="mb-2 mt-6 block text-black">
-                         Username
+                         Email
                     </label>
                     <input
                     type="email"
@@ -52,7 +52,7 @@ export const Signup = () => {
                          Password
                     </label>
                     <input
-                    type="text"
+                    type="password"
                     placeholder="Password"
                     value={formData.password}
                     onChange={(e) => setFormData({password: e.target.value}) }
@@ -61,12 +61,12 @@ export const Signup = () => {
                </div>
                
                <div className="button">
-                    <button onClick={doLogin} className="flex w-96 justify-center rounded bg-primary p-3 mt-8 font-medium text-gray">
+                    <button onClick={doSignup} className="flex w-96 justify-center rounded bg-primary p-3 mt-8 font-medium text-gray">
                          Sign Up
                     </button>
                </div>
                {errorMessage ?
-               <div className="error">{errorMessage}</div>
+                    <div className="error">{errorMessage}</div>
                : null }
           </div>
      )

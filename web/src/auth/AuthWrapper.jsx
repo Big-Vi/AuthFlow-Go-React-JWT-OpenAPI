@@ -54,13 +54,17 @@ export const AuthWrapper = () => {
       if (response.ok) {
         const userData = await response.json();
         setUser({ name: userData.userName, isAuthenticated: true });
+        navigate("/account")
       } else {
         // Handle login failure here, e.g., show an error message
-        console.error("Login failed");
+        const errorData = await response.json();
+        console.log(errorData)
+        throw errorData;
       }
     } catch (error) {
       // Handle network error, e.g., display a message to the user
-      console.error("Network error:", error);
+      console.error("Login error:", error);
+      throw error;
     }
   };
 

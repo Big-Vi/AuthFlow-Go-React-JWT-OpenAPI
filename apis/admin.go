@@ -118,11 +118,12 @@ func (userApi *userApi) login(c echo.Context) error {
 		return err
 	}
 	if !exist {
-		return echo.NewHTTPError(http.StatusForbidden, "Email does not exist.")
+		return c.JSON(http.StatusUnauthorized, "Email does not exist.")
 	}
+	
 
 	if !ValidPassword(user, loginReq.Password) {
-		return fmt.Errorf("not authenticated")
+		return c.JSON(http.StatusUnauthorized, "Password provided is wrong.")
 	}
 
 	token, err := createJWT(user)
