@@ -54,25 +54,5 @@ func generate() *openapi3.Spec {
 
 	buildUser(reflector)
 
-	scheme := openapi3.SecuritySchemeOrRef{
-		SecurityScheme: &openapi3.SecurityScheme{
-			HTTPSecurityScheme: &openapi3.HTTPSecurityScheme{
-				Scheme: "bearerAuth",
-				Bearer: &openapi3.Bearer{},
-			},
-		},
-	}
-	security := openapi3.ComponentsSecuritySchemes{}
-	security.WithMapOfSecuritySchemeOrRefValuesItem("bearerAuth", scheme)
-	reflector.Spec.Components.WithSecuritySchemes(security)
-
-	//
-	// enforce security scheme globally
-	//
-
-	reflector.Spec.WithSecurity(map[string][]string{
-		"bearerAuth": {},
-	})
-
 	return reflector.Spec
 }

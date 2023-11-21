@@ -10,7 +10,6 @@ import (
 	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/core"
 	"github.com/Big-Vi/AuthFlow-Go-React-JWT-OpenAPI/models"
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,16 +29,6 @@ func bindUserApi(app core.Base, api *echo.Group) {
 }
 
 func (userApi *userApi) viewDashboard(c echo.Context) error {
-	sessionID, err := c.Cookie("sessionID")
-	if err == nil {
-		sessionData, err := userApi.app.Dao.RedisClient.HGetAll(c.Request().Context(), sessionID.Value).Result()
-		if err != nil {
-			return c.JSON(http.StatusOK, err.Error())
-		}
-
-		// Use sessionData to access user-specific session information
-		fmt.Println("d", sessionData)
-	}
 	return c.JSON(http.StatusOK, "user dashboard")
 }
 
@@ -55,7 +44,7 @@ func (userApi *userApi) create(c echo.Context) error {
 	}
 
 	if err := userApi.app.Dao.CreateUser(user); err != nil {
-		return c.JSON(http.StatusConflict, "User already exists")
+		return c.JSON(http.StatusConflict, "Email already exists")
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -142,26 +131,6 @@ func (userApi *userApi) login(c echo.Context) error {
 		// Secure:   true, // Enable in production with HTTPS
 	})
 
-	// Create a new Redis session for the user
-	sessionID := uuid.New().String() // Unique session ID
-	sessionData := map[string]interface{}{
-		"user_id": user.ID,
-	}
-
-	// Store the session data in Redis
-	err = userApi.app.Dao.RedisClient.HSet(c.Request().Context(), sessionID, sessionData).Err()
-	if err != nil {
-		return c.JSON(http.StatusOK, err)
-	}
-
-	// Set a cookie with the session ID & Email
-	c.SetCookie(&http.Cookie{
-		Name:     "sessionID",
-		Value:    sessionID,
-		Domain:   "localhost",
-		SameSite: 2,
-		Path:     "/",
-	})
 	c.SetCookie(&http.Cookie{
 		Name:     "email",
 		Value:    user.Email,
@@ -175,7 +144,6 @@ func (userApi *userApi) login(c echo.Context) error {
 		Email: user.Email,
 	}
 	fmt.Println(resp)
-	fmt.Println(sessionID)
 
 	userResp := map[string]interface{}{
 		"userName":        user.Email,
@@ -183,25 +151,9 @@ func (userApi *userApi) login(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, userResp)
-	// return c.Redirect(http.StatusSeeOther, "/")
 }
 
 func (userApi *userApi) logout(c echo.Context) error {
-	// Retrieve the session ID or token from the client
-	sessionID, err := c.Cookie("sessionID") // Retrieve the session ID from a cookie
-	// OR
-	// token := c.Request().Header.Get("Authorization") // Retrieve the token from the header
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User is not authenticated")
-	}
-
-	// Delete the session data in Redis
-	err = userApi.app.Dao.RedisClient.Del(c.Request().Context(), sessionID.Value).Err()
-	if err != nil {
-		return c.JSON(http.StatusOK, err)
-	}
-
 	c.SetCookie(&http.Cookie{
 		Name:     "access_token",
 		Path:     "/",
@@ -209,13 +161,6 @@ func (userApi *userApi) logout(c echo.Context) error {
 		MaxAge:   -1,
 	})
 
-	// Remove the session cookie (optional)
-	c.SetCookie(&http.Cookie{
-		Name:   "sessionID",
-		Value:  "",
-		Path:   "/",
-		MaxAge: -1, // Expire the cookie
-	})
 	// Remove the session cookie (optional)
 	c.SetCookie(&http.Cookie{
 		Name:   "email",

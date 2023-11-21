@@ -5,6 +5,7 @@ import {
   RenderRoutes,
 } from "../components/structure/RenderNavigation";
 import { useNavigate } from "react-router-dom";
+import { ApiEndpoints } from '../const/apiEndpoints';
 
 const AuthContext = createContext();
 export const AuthData = () => useContext(AuthContext);
@@ -16,7 +17,7 @@ export const AuthWrapper = () => {
 
   const checkAuthenticationStatus = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/user/auth-status", {
+      const response = await fetch(ApiEndpoints.AUTHSTATUS, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -42,7 +43,7 @@ export const AuthWrapper = () => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch("http://localhost:8000/api/user/login", {
+      const response = await fetch(ApiEndpoints.LOGIN, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -58,7 +59,6 @@ export const AuthWrapper = () => {
       } else {
         // Handle login failure here, e.g., show an error message
         const errorData = await response.json();
-        console.log(errorData)
         throw errorData;
       }
     } catch (error) {
@@ -70,7 +70,7 @@ export const AuthWrapper = () => {
 
   const signup = async (username, email, password) => {
     try {
-      const response = await fetch("http://localhost:8000/api/user/signup", {
+      const response = await fetch(ApiEndpoints.SIGNUP, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -83,17 +83,18 @@ export const AuthWrapper = () => {
         console.log("Signup successful.");
         navigate("/login")
       } else {
-        // Handle signup failure here, e.g., show an error message
-        console.error("Signup failed");
+        const errorData = await response.json();
+        throw errorData;
       }
     } catch (error) {
       // Handle network error, e.g., display a message to the user
       console.error("Network error:", error);
+      throw error;
     }
   };
 
   const logout = async () => {
-    await fetch("http://localhost:8000/api/user/logout", {
+    await fetch(ApiEndpoints.LOGOUT, {
       method: "POST",
       credentials: "include",
       headers: {

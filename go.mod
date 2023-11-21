@@ -10,7 +10,6 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.2
-	github.com/redis/go-redis/v9 v9.2.1
 	github.com/swaggest/openapi-go v0.2.41
 	github.com/swaggest/swgui v1.7.4
 	golang.org/x/crypto v0.14.0

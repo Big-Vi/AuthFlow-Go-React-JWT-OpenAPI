@@ -2,8 +2,6 @@ openapi: 3.0.3
 info:
   title: API Specification
   version: 1.0.0
-security:
-- bearerAuth: []
 paths:
   /api/user/dashboard:
     get:
@@ -104,7 +102,3 @@ components:
         username:
           type: string
       type: object
-  securitySchemes:
-    bearerAuth:
-      scheme: bearer
-      type: http
