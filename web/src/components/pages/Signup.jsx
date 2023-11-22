@@ -63,18 +63,21 @@ export const Signup = () => {
                                    name="userName"
                                    type="text"
                                    placeholder="Enter username"
+                                   autoComplete="off" 
                               />
                               <TextInput
                                    label="Email*"
                                    name="email"
                                    type="email"
                                    placeholder="email@gmail.com"
+                                   autoComplete="whatever" //Some browsers attempt to autosuggest even it's value set to off.
                               />
                               <TextInput
                                    label="Password*"
                                    name="password"
                                    type="password"
                                    placeholder="Password"
+                                   autoComplete="off" 
                               />
                               <div className="button">
                                    <button type="submit" disabled={isSubmitting} className="flex w-96 justify-center rounded bg-primary p-3 mt-8 font-medium text-gray">

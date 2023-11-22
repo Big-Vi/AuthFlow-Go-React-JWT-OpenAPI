@@ -6,6 +6,7 @@ export const Home = () => {
                     <h1 className="text-2xl font-bold text-black mb-4 uppercase font-bold">Auth flow demo</h1>
                     <ul className="list-disc list-inside font-semibold">
                          <li>Golang backend(Echo framework) - JWT Auth</li>
+                         <li>Postgres</li>
                          <li>OpenAPI Specification endpoint</li>
                          <li>React SPA</li>
                          <li>Access token stored as secure cookie</li>
